@@ -2,11 +2,12 @@ version: '3.8'
 services:
   dev-db:
     image: postgres:13
+    restart: 'always'
     ports:
       - 5434:5432
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: area
     networks:
       - areanetwork
