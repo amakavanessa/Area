@@ -1,6 +1,10 @@
-import { Controller, Post, Req } from '@nestjs/common';
-import { Request } from 'express';
+import {
+  Body,
+  Controller,
+  Post,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { AuthDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
@@ -8,9 +12,10 @@ export class AuthController {
 
   @Post('signup')
   //not advisable to use libraries that are framework specific in the service layer so your code can be resusable whhen you change frameworks
-  signup(@Req() req: Request) {
-    console.log(req.body);
-    return this.authService.signup();
+  signup(@Body() dto: AuthDto) {
+    return this.authService.signup(dto);
+
+    //pipes are functions that transform data
   }
   @Post('signin')
   signin() {

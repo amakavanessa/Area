@@ -17,8 +17,9 @@ model User{
   email String
   hash String
   firstName String
-  lastName String?
+  lastName String
   type String
+  profilePicture String?
 }
 
 model Bookmark{
