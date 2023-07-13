@@ -15,11 +15,7 @@ export class AuthDto {
 
   @IsString()
   @IsNotEmpty()
-  firstName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  lastName: string;
+  username: string;
 
   @IsString()
   type: 'host' | 'user' | 'admin';

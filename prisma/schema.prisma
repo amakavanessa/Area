@@ -14,13 +14,38 @@ model User{
   id Int @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  email String
+  email String @unique
   hash String
-  firstName String
-  lastName String
+  username String @unique
   type String
   profilePicture String?
+
+  bookmarks Bookmark[]
+  reviews Review[]
+  hosts Host[]
+  
+  @@map("users")
 }
+
+model Host{
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  firstName String
+  lastName String
+  profilePicture String
+  verification String
+  verificationStatus String
+  events Event[]
+  userId Int
+  areaId Int
+
+  user User @relation(fields: [userId], references: [id])
+  area Area @relation(fields: [areaId], references: [id])
+  
+  @@map("hosts")
+}
+
 
 model Bookmark{
   id Int @id @default(autoincrement())
@@ -29,6 +54,10 @@ model Bookmark{
   link String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("bookmarks")
 }
 
 model Event{
@@ -40,6 +69,16 @@ model Event{
   advertised Boolean
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  startDate DateTime
+  endDate DateTime
+  areaId Int
+  hostId Int
+
+  area Area @relation(fields: [areaId], references: [id])
+  host Host @relation(fields: [hostId], references: [id])
+  reviews Review[]
+
+  @@map("events")
 }
 
 model Review{
@@ -47,5 +86,24 @@ model Review{
   review String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  userId Int
+  eventId Int
 
+  user User @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@map("reviews")
+}
+
+model Area{
+  id Int @id @default(autoincrement())
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  geolocation String
+  events Event[]
+  hosts Host[]
+
+
+  @@map("areas")
 }
