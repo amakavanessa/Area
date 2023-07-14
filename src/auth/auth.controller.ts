@@ -4,7 +4,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto } from './dto';
+import { AuthDto, AuthSigninDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
@@ -18,7 +18,7 @@ export class AuthController {
     //pipes are functions that transform data
   }
   @Post('signin')
-  signin() {
-    return this.authService.signin();
+  signin(@Body() dto: AuthSigninDto) {
+    return this.authService.signin(dto);
   }
 }

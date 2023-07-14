@@ -18,5 +18,16 @@ export class AuthDto {
   username: string;
 
   @IsString()
+  @IsNotEmpty()
   type: 'host' | 'user' | 'admin';
+}
+
+export class AuthSigninDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 }
