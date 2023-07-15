@@ -1,2 +1,2 @@
-// Baron export type
+// Barrel export type
 export * from './auth.dto';
