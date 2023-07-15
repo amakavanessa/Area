@@ -11,11 +11,17 @@ import {
   ExtractJwt,
 } from 'passport-jwt';
 
+import { PrismaService } from 'src/prisma/prisma.service';
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(
   Strategy,
+  'jwt',
 ) {
-  constructor(config: ConfigService) {
+  constructor(
+    config: ConfigService,
+    private prisma: PrismaService,
+  ) {
     super({
       jwtFromRequest:
         ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -23,17 +29,28 @@ export class JwtStrategy extends PassportStrategy(
     });
   }
 
-  //   async validate(payload: JwtPayload) {
-  //     const user = await this.prisma.user.findUnique({
-  //       where: {
-  //         id: payload.id,
-  //       },
-  //     });
+  async validate(payload: {
+    sub: number;
+    email: string;
+    type: string;
+  }) {
+    const user =
+      await this.prisma.user.findUnique({
+        where: {
+          id: payload.sub,
+        },
+        select: {
+          id: true,
+          email: true,
+          type: true,
+          username: true,
+        },
+      });
 
-  //     if (!user) {
-  //       throw new UnauthorizedException();
-  //     }
+    // if (!user) {
+    //   throw new UnauthorizedException();
+    // }
 
-  //     return user;
-  //   }
+    return user;
+  }
 }
