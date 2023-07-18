@@ -11,5 +11,16 @@ services:
       POSTGRES_DB: area
     networks:
       - areanetwork
+  test-db:
+    image: postgres:13
+    restart: 'always'
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: area
+    networks:
+      - areanetwork
 networks:
   areanetwork:

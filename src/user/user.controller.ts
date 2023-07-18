@@ -4,9 +4,9 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { GetUser } from 'src/auth/decorator';
+import { GetUser } from '../auth/decorator';
 
-import { JwtGuard } from 'src/auth/guard';
+import { JwtGuard } from '../auth/guard';
 
 import { User } from '@prisma/client';
 
