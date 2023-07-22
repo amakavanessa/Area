@@ -12,6 +12,7 @@ async function bootstrap() {
     new ValidationPipe({
       //this trims out the fields that are not in the dto
       whitelist: true,
+      transform: true,
     }),
   );
   await app.listen(3333);
