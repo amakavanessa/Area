@@ -32,7 +32,7 @@ export class AuthService {
         },
       });
 
-      return this.signTToken(
+      return this.signToken(
         user.id,
         user.email,
         user.type,
@@ -80,13 +80,13 @@ export class AuthService {
       );
     }
 
-    return this.signTToken(
+    return this.signToken(
       user.id,
       user.email,
       user.type,
     );
   }
-  async signTToken(
+  async signToken(
     userId: number,
     email: string,
     type: string,
