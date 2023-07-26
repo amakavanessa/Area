@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Delete,
   Param,
   UseGuards,
 } from '@nestjs/common';
@@ -32,5 +33,15 @@ export class UserController {
   @Get(':username')
   getUser(@Param('username') username: string) {
     return this.userService.getOne(username);
+  }
+
+  @Get('type/:type')
+  getUsersByType(@Param('type') type: string) {
+    return this.userService.getUsersByType(type);
+  }
+
+  @Delete('me')
+  deleteMe(@GetUser() user: User) {
+    return this.userService.deleteMe(user.id);
   }
 }
