@@ -78,11 +78,27 @@ export class UserService {
     return { length: users.length, users };
   }
 
-  async deleteMe(id: number): Promise<String> {
-    const user = this.prisma.user.delete({
-      where: { id: id },
+  async updateMe(dto: UserDto): Promise<UserDto> {
+    const user = await this.prisma.user.update({
+      where: { email: dto.email },
+      data: {
+        username: dto.username,
+        profilePicture: dto.profilePicture,
+      },
     });
+    return user;
+  }
 
-    return `User deleted successfully!`;
+  async deleteMe(id: number): Promise<String> {
+    try {
+      const user = await this.prisma.user.delete({
+        where: { id: id },
+      });
+
+      return `User deleted successfully!`;
+    } catch (error) {
+      // Handle potential errors, e.g., user not found, database connection issues, etc.
+      throw new Error('Failed to delete user.');
+    }
   }
 }
