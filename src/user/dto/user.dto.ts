@@ -5,3 +5,10 @@ export class UserDto {
   profilePicture: string | null;
   createdAt: Date;
 }
+
+export class UserUpdateDto {
+  username?: string;
+  email?: string;
+  profilePicture?: string;
+  updatedAt: Date;
+}

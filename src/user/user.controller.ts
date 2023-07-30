@@ -1,15 +1,18 @@
 import {
+  Body,
   Controller,
   Get,
   Delete,
   Param,
+  Patch,
   UseGuards,
   Post,
   UploadedFile,
   UseInterceptors,
   BadRequestException,
+  Res,
 } from '@nestjs/common';
-import { Express } from 'express';
+import { Express, Response } from 'express';
 
 import { GetUser } from '../auth/decorator';
 
@@ -18,7 +21,7 @@ import { JwtGuard } from '../auth/guard';
 import { UserService } from './user.service';
 
 import { User } from '@prisma/client';
-
+import { UserUpdateDto } from './dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 
@@ -47,6 +50,11 @@ export class UserController {
   getUsersByType(@Param('type') type: string) {
     return this.userService.getUsersByType(type);
   }
+
+  // @Patch('me')
+  // updateMe(@Body() dto: UserUpdateDto) {
+  //   return this.userService.updateMe(dto);
+  // }
 
   @Post('upload-photo')
   @UseInterceptors(
@@ -89,12 +97,18 @@ export class UserController {
       );
     } else {
       const response = {
-        filePath:
-          'http://localhost:3000/me/profilepic' +
-          file.filename,
+        filePath: `http://localhost:3333/users/pictures/${file.filename}`,
       };
       return response;
     }
+  }
+
+  @Get('pictures/:filename')
+  async getPicture(
+    @Param('filename') filename: string,
+    @Res() res: Response,
+  ) {
+    res.sendFile(filename, { root: './uploads' });
   }
 
   @Delete('me')

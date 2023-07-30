@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { NotFoundException } from '@nestjs/common';
+
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UserDto } from './dto';
+import { UserDto, UserUpdateDto } from './dto';
 
 @Injectable()
 export class UserService {
@@ -76,17 +77,6 @@ export class UserService {
       );
     }
     return { length: users.length, users };
-  }
-
-  async updateMe(dto: UserDto): Promise<UserDto> {
-    const user = await this.prisma.user.update({
-      where: { email: dto.email },
-      data: {
-        username: dto.username,
-        profilePicture: dto.profilePicture,
-      },
-    });
-    return user;
   }
 
   async deleteMe(id: number): Promise<String> {
