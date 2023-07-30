@@ -1,8 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { NotFoundException } from '@nestjs/common';
-
+import {
+  NotFoundException,
+  UploadedFile,
+  UseInterceptors,
+  BadRequestException,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserDto, UserUpdateDto } from './dto';
+import { diskStorage } from 'multer';
 
 @Injectable()
 export class UserService {
@@ -77,6 +83,22 @@ export class UserService {
       );
     }
     return { length: users.length, users };
+  }
+
+  async updateMe(
+    id: number,
+    dto: UserUpdateDto,
+  ): Promise<UserDto> {
+    const user = await this.prisma.user.update({
+      where: { id: id },
+      data: {
+        username: dto.username,
+        email: dto.email,
+        profilePicture: dto.profilePicture, // Use the relative filepath from the dto
+        updatedAt: new Date(),
+      },
+    });
+    return user;
   }
 
   async deleteMe(id: number): Promise<String> {

@@ -51,12 +51,7 @@ export class UserController {
     return this.userService.getUsersByType(type);
   }
 
-  // @Patch('me')
-  // updateMe(@Body() dto: UserUpdateDto) {
-  //   return this.userService.updateMe(dto);
-  // }
-
-  @Post('upload-photo')
+  @Patch('me')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -88,19 +83,19 @@ export class UserController {
       },
     }),
   )
-  uploadPhoto(
+  async updateMe(
+    @Body() dto: UserUpdateDto,
+    @GetUser() user: User,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    if (!file) {
-      throw new BadRequestException(
-        'File is not an image',
-      );
-    } else {
-      const response = {
-        filePath: `http://localhost:3333/users/pictures/${file.filename}`,
-      };
-      return response;
+    if (file) {
+      dto.profilePicture = `/pictures/${file.filename}`;
     }
+
+    return this.userService.updateMe(
+      user.id,
+      dto,
+    );
   }
 
   @Get('pictures/:filename')
