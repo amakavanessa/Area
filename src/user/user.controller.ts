@@ -99,7 +99,7 @@ export class UserController {
   }
 
   @Get('pictures/:filename')
-  async getPictures(
+  async getPicture(
     @Param('filename') filename: string,
     @Res() res: Response,
   ) {

@@ -1,4 +1,11 @@
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+
 export class UserDto {
+  @IsEmail()
   email: string;
   username: string;
   type: string;
@@ -7,8 +14,13 @@ export class UserDto {
 }
 
 export class UserUpdateDto {
-  username?: string;
-  email?: string;
+  @IsOptional()
+  @IsString()
+  username: string;
+  @IsEmail()
+  @IsOptional()
+  email: string;
+  @IsOptional()
   profilePicture?: string;
   updatedAt: Date;
 }
