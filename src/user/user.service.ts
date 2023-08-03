@@ -85,21 +85,6 @@ export class UserService {
     return { length: users.length, users };
   }
 
-  // async updateMe(
-  //   id: number,
-  //   dto: UserUpdateDto,
-  // ): Promise<UserDto> {
-  //   const user = await this.prisma.user.update({
-  //     where: { id: id },
-  //     data: {
-  //       username: dto.username,
-  //       email: dto.email,
-  //       profilePicture: dto.profilePicture, // Use the relative filepath from the dto
-  //       updatedAt: new Date(),
-  //     },
-  //   });
-  //   return user;
-  // }
   async updateMe(
     id: number,
     dto: UserUpdateDto,
@@ -114,7 +99,36 @@ export class UserService {
     return updatedUser;
   }
 
+  //this function would just be used by the admin
+  async updateUser(
+    id: number,
+    dto: UserUpdateDto,
+  ): Promise<UserDto> {
+    const updatedUser =
+      await this.prisma.user.update({
+        data: dto,
+        where: {
+          id,
+        },
+      });
+    return updatedUser;
+  }
+
   async deleteMe(id: number): Promise<String> {
+    try {
+      const user = await this.prisma.user.delete({
+        where: { id: id },
+      });
+
+      return `User deleted successfully!`;
+    } catch (error) {
+      // Handle potential errors, e.g., user not found, database connection issues, etc.
+      throw new Error('Failed to delete user.');
+    }
+  }
+
+  //this function would just be used by the admin
+  async deleteUser(id: number): Promise<String> {
     try {
       const user = await this.prisma.user.delete({
         where: { id: id },
