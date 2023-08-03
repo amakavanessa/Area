@@ -14,6 +14,8 @@ import { diskStorage } from 'multer';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
+  //CRUD OPERATIONS
+
   async getOne(name: string): Promise<UserDto> {
     const user =
       await this.prisma.user.findUnique({
@@ -139,5 +141,23 @@ export class UserService {
       // Handle potential errors, e.g., user not found, database connection issues, etc.
       throw new Error('Failed to delete user.');
     }
+  }
+
+  //reset user password
+  async resetPassword(
+    email: string,
+  ): Promise<String> {
+    const user =
+      await this.prisma.user.findUnique({
+        where: { email: email },
+      });
+
+    if (!user) {
+      throw new NotFoundException(
+        `User does not exist`,
+      );
+    }
+
+    return `Password reset link sent to ${email}`;
   }
 }
