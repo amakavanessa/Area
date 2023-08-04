@@ -144,20 +144,20 @@ export class UserService {
   }
 
   //reset user password
-  // async resetPassword(
-  //   email: string,
-  // ): Promise<String> {
-  //   const user =
-  //     await this.prisma.user.findUnique({
-  //       where: { email: email },
-  //     });
+  async resetPassword(
+    email: string,
+  ): Promise<String> {
+    const user =
+      await this.prisma.user.findUnique({
+        where: { email: email },
+      });
 
-  //   if (!user) {
-  //     throw new NotFoundException(
-  //       `User does not exist`,
-  //     );
-  //   }
+    if (!user) {
+      throw new NotFoundException(
+        `User does not exist`,
+      );
+    }
 
-  //   return `Password reset link sent to ${email}`;
-  // }
+    return `Password reset link sent to ${email}`;
+  }
 }
