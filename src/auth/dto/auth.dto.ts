@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
@@ -11,6 +12,7 @@ export class AuthDto {
 
   @IsString()
   @IsNotEmpty()
+  @Exclude()
   password: string;
 
   @IsString()
@@ -20,6 +22,10 @@ export class AuthDto {
   @IsString()
   @IsNotEmpty()
   type: 'host' | 'user' | 'admin';
+
+  constructor(partial: Partial<AuthDto>) {
+    Object.assign(this, partial);
+  }
 }
 
 export class AuthSigninDto {

@@ -98,6 +98,13 @@ export class UserController {
     );
   }
 
+  @Patch('reset-password/:token')
+  async resetPassword(@GetUser() user: User) {
+    return this.userService.resetPassword(
+      user.email,
+    );
+  }
+
   @Get('pictures/:filename')
   async getPicture(
     @Param('filename') filename: string,
