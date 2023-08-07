@@ -9,6 +9,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserDto, UserUpdateDto } from './dto';
 import { diskStorage } from 'multer';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UserService {
@@ -141,6 +142,31 @@ export class UserService {
       // Handle potential errors, e.g., user not found, database connection issues, etc.
       throw new Error('Failed to delete user.');
     }
+  }
+
+  async generateResetToken(): Promise<{
+    resetToken: String;
+    passwordResetToken: String;
+    passwordResetExpires: Number;
+  }> {
+    const resetToken = crypto
+      .randomBytes(32)
+      .toString('hex');
+
+    const passwordResetToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    // console.log({ resetToken }, this.passwordResetToken);
+    const passwordResetExpires =
+      Date.now() + 10 * 60 * 1000;
+
+    return {
+      resetToken,
+      passwordResetToken,
+      passwordResetExpires,
+    };
   }
 
   //reset user password

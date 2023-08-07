@@ -98,6 +98,11 @@ export class UserController {
     );
   }
 
+  @Get('generate-reset-token')
+  async generateResetToken() {
+    return this.userService.generateResetToken();
+  }
+
   @Patch('reset-password/:token')
   async resetPassword(@GetUser() user: User) {
     return this.userService.resetPassword(

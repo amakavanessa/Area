@@ -19,6 +19,9 @@ model User{
   username String @unique
   type String
   profilePicture String?
+  passwordChangedAt DateTime?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
 
   bookmarks Bookmark[]
   reviews Review[]
