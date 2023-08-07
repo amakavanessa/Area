@@ -144,10 +144,10 @@ export class UserService {
     }
   }
 
-  async generateResetToken(): Promise<{
-    resetToken: String;
-    passwordResetToken: String;
-    passwordResetExpires: Number;
+  async resetPassword(email: string): Promise<{
+    resetToken: string;
+    passwordResetToken: string;
+    passwordResetExpires: Date;
   }> {
     const resetToken = crypto
       .randomBytes(32)
@@ -159,9 +159,21 @@ export class UserService {
       .digest('hex');
 
     // console.log({ resetToken }, this.passwordResetToken);
-    const passwordResetExpires =
-      Date.now() + 10 * 60 * 1000;
+    const passwordResetExpires = new Date();
+    passwordResetExpires.setMinutes(
+      passwordResetExpires.getMinutes() + 10,
+    );
 
+    const resetCreds =
+      await this.prisma.user.update({
+        where: { email: email },
+        data: {
+          passwordResetToken: passwordResetToken,
+          passwordResetExpires:
+            passwordResetExpires,
+          passwordChangedAt: new Date(),
+        },
+      });
     return {
       resetToken,
       passwordResetToken,
@@ -170,20 +182,20 @@ export class UserService {
   }
 
   //reset user password
-  async resetPassword(
-    email: string,
-  ): Promise<String> {
-    const user =
-      await this.prisma.user.findUnique({
-        where: { email: email },
-      });
+  // async resetPassword(
+  //   email: string,
+  // ): Promise<String> {
+  //   const user =
+  //     await this.prisma.user.findUnique({
+  //       where: { email: email },
+  //     });
 
-    if (!user) {
-      throw new NotFoundException(
-        `User does not exist`,
-      );
-    }
+  //   if (!user) {
+  //     throw new NotFoundException(
+  //       `User does not exist`,
+  //     );
+  //   }
 
-    return `Password reset link sent to ${email}`;
-  }
+  //   return `Password reset link sent to ${email}`;
+  // }
 }

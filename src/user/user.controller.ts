@@ -98,7 +98,7 @@ export class UserController {
     );
   }
 
-  @Get('generate-reset-token')
+  @Get('reset/generate-reset-token')
   async generateResetToken() {
     return this.userService.generateResetToken();
   }
