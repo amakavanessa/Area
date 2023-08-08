@@ -174,28 +174,16 @@ export class UserService {
           passwordChangedAt: new Date(),
         },
       });
+
+    if (!resetCreds) {
+      throw new BadRequestException(
+        `Token could not be sent to ${email}`,
+      );
+    }
     return {
       resetToken,
       passwordResetToken,
       passwordResetExpires,
     };
   }
-
-  //reset user password
-  // async resetPassword(
-  //   email: string,
-  // ): Promise<String> {
-  //   const user =
-  //     await this.prisma.user.findUnique({
-  //       where: { email: email },
-  //     });
-
-  //   if (!user) {
-  //     throw new NotFoundException(
-  //       `User does not exist`,
-  //     );
-  //   }
-
-  //   return `Password reset link sent to ${email}`;
-  // }
 }
