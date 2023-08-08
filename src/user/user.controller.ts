@@ -6,10 +6,8 @@ import {
   Param,
   Patch,
   UseGuards,
-  Post,
   UploadedFile,
   UseInterceptors,
-  BadRequestException,
   Res,
 } from '@nestjs/common';
 import { Express, Response } from 'express';
@@ -21,7 +19,10 @@ import { JwtGuard } from '../auth/guard';
 import { UserService } from './user.service';
 
 import { User } from '@prisma/client';
-import { UserUpdateDto } from './dto';
+import {
+  UserUpdateDto,
+  PasswordResetDto,
+} from './dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 
@@ -102,15 +103,20 @@ export class UserController {
   async generateResetToken(
     @GetUser() user: User,
   ) {
-    return this.userService.resetPassword(
+    return this.userService.getResetToken(
       user.email,
     );
   }
 
   @Patch('reset-password/:token')
-  async resetPassword(@GetUser() user: User) {
+  async resetPassword(
+    @Param('token') token: string,
+    @Body() dto: PasswordResetDto,
+    @GetUser() user: User,
+  ) {
     return this.userService.resetPassword(
-      user.email,
+      token,
+      dto,
     );
   }
 

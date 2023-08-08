@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import {
   NotFoundException,
-  UploadedFile,
-  UseInterceptors,
   BadRequestException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UserDto, UserUpdateDto } from './dto';
-import { diskStorage } from 'multer';
+import {
+  UserDto,
+  UserUpdateDto,
+  PasswordResetDto,
+} from './dto';
+import * as argon from 'argon2';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -144,7 +145,7 @@ export class UserService {
     }
   }
 
-  async resetPassword(email: string): Promise<{
+  async getResetToken(email: string): Promise<{
     resetToken: string;
     passwordResetToken: string;
     passwordResetExpires: Date;
@@ -185,5 +186,51 @@ export class UserService {
       passwordResetToken,
       passwordResetExpires,
     };
+  }
+
+  async resetPassword(
+    token: string,
+    dto: PasswordResetDto,
+  ) {
+    if (dto.password !== dto.passwordConfirm) {
+      throw new BadRequestException(
+        'Passwords do not match',
+      );
+    }
+    const user = await this.prisma.user.findFirst(
+      {
+        where: {
+          passwordResetToken: token,
+          passwordResetExpires: {
+            gte: new Date(),
+          },
+        },
+      },
+    );
+
+    if (!user) {
+      throw new BadRequestException(
+        'Token is invalid or has expired',
+      );
+    }
+
+    const hash = await argon.hash(dto.password);
+    const updatedUser =
+      await this.prisma.user.update({
+        where: { email: user.email },
+        data: {
+          hash: hash,
+          passwordResetToken: null,
+          passwordResetExpires: null,
+        },
+      });
+
+    if (!updatedUser) {
+      throw new BadRequestException(
+        'Password could not be updated',
+      );
+    }
+
+    return 'Password updated successfully!';
   }
 }

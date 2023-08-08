@@ -24,3 +24,10 @@ export class UserUpdateDto {
   profilePicture?: string;
   updatedAt: Date;
 }
+
+export class PasswordResetDto {
+  @IsString()
+  password: string;
+  @IsString()
+  passwordConfirm: string;
+}
