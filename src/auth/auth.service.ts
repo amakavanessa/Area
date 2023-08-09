@@ -90,7 +90,10 @@ export class AuthService {
     userId: number,
     email: string,
     type: string,
-  ): Promise<{ access_token: string }> {
+  ): Promise<{
+    access_token: string;
+    decoded: any;
+  }> {
     const payload = {
       sub: userId,
       email,
@@ -105,6 +108,7 @@ export class AuthService {
     );
     return {
       access_token: token,
+      decoded: this.jwt.decode(token),
     };
   }
 }

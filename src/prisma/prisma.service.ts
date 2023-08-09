@@ -14,6 +14,14 @@ export class PrismaService extends PrismaClient {
     });
   }
 
+  async onModuleInit() {
+    this.$connect();
+  }
+
+  async onModuleDestroy() {
+    this.$disconnect();
+  }
+
   cleanDb() {
     return this.$transaction([
       this.bookmark.deleteMany(),
