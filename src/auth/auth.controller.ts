@@ -7,11 +7,15 @@ import {
 import {
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
+import { User } from '@prisma/client';
 
 import { AuthService } from './auth.service';
 import { AuthDto, AuthSigninDto } from './dto';
+import { AuthGuard } from '@nestjs/passport';
 import { Tokens } from './types';
+import { GetUser } from './decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -30,9 +34,13 @@ export class AuthController {
     return this.authService.signin(dto);
   }
 
-  @Post('/logout')
-  logout() {}
+  @UseGuards(AuthGuard('jwt-access'))
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout(@GetUser() user: User) {
+    return this.authService.logout(user.id);
+  }
 
-  @Post('/refresh')
+  @Post('refresh')
   refreshTokens() {}
 }

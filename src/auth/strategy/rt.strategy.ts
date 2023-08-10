@@ -11,7 +11,7 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class RtStrategy extends PassportStrategy(
   Strategy,
-  'jwt',
+  'jwt-refresh',
 ) {
   constructor(config: ConfigService) {
     super({
