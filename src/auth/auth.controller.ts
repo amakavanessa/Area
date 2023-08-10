@@ -3,6 +3,7 @@ import {
   Controller,
   Post,
 } from '@nestjs/common';
+
 import {
   HttpCode,
   HttpStatus,
@@ -10,6 +11,7 @@ import {
 
 import { AuthService } from './auth.service';
 import { AuthDto, AuthSigninDto } from './dto';
+import { Tokens } from './types';
 
 @Controller('auth')
 export class AuthController {
@@ -18,7 +20,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('signup')
   //not advisable to use libraries that are framework specific in the service layer so your code can be resusable whhen you change frameworks
-  signup(@Body() dto: AuthDto) {
+  signup(@Body() dto: AuthDto): Promise<Tokens> {
     return this.authService.signup(dto);
 
     //pipes are functions that transform data
@@ -27,4 +29,10 @@ export class AuthController {
   signin(@Body() dto: AuthSigninDto) {
     return this.authService.signin(dto);
   }
+
+  @Post('/logout')
+  logout() {}
+
+  @Post('/refresh')
+  refreshTokens() {}
 }

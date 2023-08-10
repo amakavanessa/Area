@@ -8,6 +8,7 @@ import * as argon from 'argon2';
 import { Prisma } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { Tokens } from './types';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +18,7 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async signup(dto: AuthDto) {
+  async signup(dto: AuthDto): Promise<Tokens> {
     //generate a hash password
     const hash = await argon.hash(dto.password);
 
@@ -32,7 +33,7 @@ export class AuthService {
         },
       });
 
-      return this.signToken(
+      return this.getToken(
         user.id,
         user.email,
         user.type,
@@ -111,4 +112,37 @@ export class AuthService {
       decoded: this.jwt.decode(token),
     };
   }
+
+  async getToken(
+    userId: number,
+    email: string,
+    type: string,
+  ): Promise<Tokens> {
+    const payload = {
+      sub: userId,
+      email,
+      type,
+    };
+
+    const ATSecret = this.config.get('AT_SECRET');
+    const RTSecret = this.config.get('RT_SECRET');
+
+    const [at, rt] = await Promise.all([
+      this.jwt.signAsync(payload, {
+        expiresIn: 60 * 15,
+        secret: ATSecret,
+      }),
+      this.jwt.signAsync(payload, {
+        expiresIn: 60 * 60 * 24 * 7,
+        secret: RTSecret,
+      }),
+    ]);
+
+    return {
+      access_token: at,
+      refresh_token: rt,
+    };
+  }
+
+  async logout() {}
 }
