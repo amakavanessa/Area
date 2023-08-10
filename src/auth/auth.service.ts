@@ -33,11 +33,17 @@ export class AuthService {
         },
       });
 
-      return this.getToken(
+      const tokens = await this.getToken(
         user.id,
         user.email,
         user.type,
       );
+
+      await this.updateRtHash(
+        user.id,
+        tokens.refresh_token,
+      );
+      return tokens;
     } catch (error) {
       if (
         error instanceof
@@ -53,7 +59,9 @@ export class AuthService {
     }
   }
 
-  async signin(dto: AuthSigninDto) {
+  async signin(
+    dto: AuthSigninDto,
+  ): Promise<Tokens> {
     //find user by email
     const user =
       await this.prisma.user.findUnique({
@@ -81,12 +89,19 @@ export class AuthService {
       );
     }
 
-    return this.signToken(
+    const tokens = await this.getToken(
       user.id,
       user.email,
       user.type,
     );
+
+    await this.updateRtHash(
+      user.id,
+      tokens.refresh_token,
+    );
+    return tokens;
   }
+  async logout() {}
   async signToken(
     userId: number,
     email: string,
@@ -144,5 +159,15 @@ export class AuthService {
     };
   }
 
-  async logout() {}
+  async updateRtHash(userId: number, rt: string) {
+    const hash = await argon.hash(rt);
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        hashedRefreshToken: hash,
+      },
+    });
+  }
 }

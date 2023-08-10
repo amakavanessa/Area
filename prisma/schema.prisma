@@ -19,6 +19,7 @@ model User{
   username String @unique
   type String
   profilePicture String?
+  hashedRefreshToken String?
   passwordChangedAt DateTime?
   passwordResetToken String?
   passwordResetExpires DateTime?
