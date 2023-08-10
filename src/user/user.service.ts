@@ -17,6 +17,29 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   //CRUD OPERATIONS
+  async getMe(id: number): Promise<UserDto> {
+    const user = await this.prisma.user.findFirst(
+      {
+        where: {
+          id: id,
+        },
+        select: {
+          email: true,
+          username: true,
+          type: true,
+          profilePicture: true,
+          createdAt: true,
+        },
+      },
+    );
+    if (!user) {
+      throw new NotFoundException(
+        `User does not exist`,
+      );
+    }
+
+    return user;
+  }
 
   async getOne(name: string): Promise<UserDto> {
     const user =
