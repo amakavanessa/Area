@@ -40,7 +40,13 @@ export class AuthController {
   logout(@GetUser() user: User) {
     return this.authService.logout(user.id);
   }
-
-  @Post('refresh')
-  refreshTokens() {}
+  //   @UseGuards(AuthGuard('jwt-refresh'))
+  //   @Post('refresh')
+  //   @HttpCode(HttpStatus.OK)
+  //   refreshTokens(@GetUser() user: User) {
+  //     return this.authService.refreshTokens(
+  //       user['id'],
+  //       user.rt,
+  //     );
+  //   }
 }

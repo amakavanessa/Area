@@ -114,6 +114,46 @@ export class AuthService {
       },
     });
   }
+
+  async refreshTokens(
+    userId: number,
+    rt: string,
+  ) {
+    const user =
+      await this.prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+
+    if (!user)
+      throw new ForbiddenException(
+        'Access Denied',
+      );
+    // if (user.hashedRefreshToken) {
+    const rtMatches = await argon.verify(
+      user.hashedRefreshToken!,
+      rt,
+    );
+
+    if (!rtMatches)
+      throw new ForbiddenException(
+        'Access Denied',
+      );
+    // }
+    const tokens = await this.getToken(
+      user.id,
+      user.email,
+      user.type,
+    );
+
+    await this.updateRtHash(
+      user.id,
+      tokens.refresh_token,
+    );
+    return tokens;
+  }
+
   async signToken(
     userId: number,
     email: string,
