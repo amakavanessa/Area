@@ -15,12 +15,13 @@ import { AuthService } from './auth.service';
 import { AuthDto, AuthSigninDto } from './dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Tokens } from './types';
-import { GetUser } from './decorator';
+import { GetUser, Public } from './decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('signup')
   //not advisable to use libraries that are framework specific in the service layer so your code can be resusable whhen you change frameworks
@@ -29,6 +30,8 @@ export class AuthController {
 
     //pipes are functions that transform data
   }
+
+  @Public()
   @Post('signin')
   signin(@Body() dto: AuthSigninDto) {
     return this.authService.signin(dto);
@@ -40,13 +43,13 @@ export class AuthController {
   logout(@GetUser() user: User) {
     return this.authService.logout(user.id);
   }
-  @UseGuards(AuthGuard('jwt-refresh'))
-  @Post('refresh')
-  @HttpCode(HttpStatus.OK)
-  refreshTokens(@GetUser() user: User) {
-    return this.authService.refreshTokens(
-      user['id'],
-      user.rt,
-    );
-  }
+  // @UseGuards(AuthGuard('jwt-refresh'))
+  // @Post('refresh')
+  // @HttpCode(HttpStatus.OK)
+  // refreshTokens(@GetUser() user: User) {
+  //   return this.authService.refreshTokens(
+  //     user['id'],
+  //     user.rt,
+  //   );
+  // }
 }
