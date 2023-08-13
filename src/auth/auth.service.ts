@@ -119,12 +119,13 @@ export class AuthService {
     userId: number,
     rt: string,
   ) {
-    const user =
-      await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findFirst(
+      {
         where: {
           id: userId,
         },
-      });
+      },
+    );
 
     if (!user)
       throw new ForbiddenException(

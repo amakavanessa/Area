@@ -37,9 +37,11 @@ export class UserController {
   }
 
   @Get('me')
-  getMe(@GetUser() user: User) {
+  async getMe(@GetUser() user: User) {
     // return user;
+    console.log(user.id);
     return this.userService.getMe(user.id);
+
     //user returns just email,username and type because that is what we used to create the token and getUser decorator gets user from the token
   }
 

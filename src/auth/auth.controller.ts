@@ -13,7 +13,7 @@ import { User } from '@prisma/client';
 
 import { AuthService } from './auth.service';
 import { AuthDto, AuthSigninDto } from './dto';
-import { AuthGuard } from '@nestjs/passport';
+import { RtGuard } from './guard';
 import { Tokens } from './types';
 import { GetUser, Public } from './decorator';
 
@@ -37,19 +37,24 @@ export class AuthController {
     return this.authService.signin(dto);
   }
 
-  @UseGuards(AuthGuard('jwt-access'))
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   logout(@GetUser() user: User) {
     return this.authService.logout(user.id);
   }
-  // @UseGuards(AuthGuard('jwt-refresh'))
-  // @Post('refresh')
-  // @HttpCode(HttpStatus.OK)
-  // refreshTokens(@GetUser() user: User) {
-  //   return this.authService.refreshTokens(
-  //     user['id'],
-  //     user.rt,
-  //   );
-  // }
+
+  @Public()
+  @UseGuards(RtGuard)
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  refreshTokens(
+    @GetUser() user: User,
+    @GetUser('refreshToken') refreshToken: string,
+  ): Promise<Tokens> {
+    // console.log(` ${user.id}`);
+    return this.authService.refreshTokens(
+      user.id,
+      refreshToken,
+    );
+  }
 }
