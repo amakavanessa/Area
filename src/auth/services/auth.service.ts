@@ -2,13 +2,17 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { AuthDto, AuthSigninDto } from './dto';
+import { PrismaService } from '../../prisma/prisma.service';
+import {
+  Cron,
+  CronExpression,
+} from '@nestjs/schedule';
+import { AuthDto, AuthSigninDto } from '../dto';
 import * as argon from 'argon2';
 import { Prisma } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Tokens } from './types';
+import { Tokens } from '../types';
 
 @Injectable()
 export class AuthService {
@@ -115,6 +119,7 @@ export class AuthService {
     });
   }
 
+  // @Cron('*/5 * * * * *')
   async refreshTokens(
     userId: number,
     rt: string,
@@ -129,7 +134,7 @@ export class AuthService {
 
     if (!user || !user.hashedRefreshToken)
       throw new ForbiddenException(
-        'Access Denied',
+        'Access Denied heyyy',
       );
 
     const rtMatches = await argon.verify(
@@ -156,14 +161,14 @@ export class AuthService {
       exp: number;
     };
 
-    if (decodedToken) {
-      //check if the current date is greater than the date the refresh token would expire, if it is log out user by deleting the refresh token
-      if (Date.now() > decodedToken.exp) {
-        await this.logout(userId);
-      }
-    } else {
-      console.log('Token could not be decoded.');
-    }
+    // if (decodedToken) {
+    //   //check if the current date is greater than the date the refresh token would expire, if it is log out user by deleting the refresh token
+    //   if (Date.now() > decodedToken.exp) {
+    //     await this.logout(userId);
+    //   }
+    // } else {
+    //   console.log('Token could not be decoded.');
+    // }
 
     return token;
   }

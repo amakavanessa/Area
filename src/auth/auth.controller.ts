@@ -9,7 +9,7 @@ import {
 
 import { User } from '@prisma/client';
 
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { AuthDto, AuthSigninDto } from './dto';
 import { RtGuard } from './guard';
 import { Tokens } from './types';
