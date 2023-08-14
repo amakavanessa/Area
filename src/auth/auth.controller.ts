@@ -2,13 +2,11 @@ import {
   Body,
   Controller,
   Post,
-} from '@nestjs/common';
-
-import {
   HttpCode,
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
+
 import { User } from '@prisma/client';
 
 import { AuthService } from './auth.service';
@@ -50,8 +48,7 @@ export class AuthController {
   refreshTokens(
     @GetUser() user: User,
     @GetUser('refreshToken') refreshToken: string,
-  ): Promise<Tokens> {
-    // console.log(` ${user.id}`);
+  ) {
     return this.authService.refreshTokens(
       user.id,
       refreshToken,

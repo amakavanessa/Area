@@ -127,11 +127,11 @@ export class AuthService {
       },
     );
 
-    if (!user)
+    if (!user || !user.hashedRefreshToken)
       throw new ForbiddenException(
         'Access Denied',
       );
-    // if (user.hashedRefreshToken) {
+
     const rtMatches = await argon.verify(
       user.hashedRefreshToken!,
       rt,
@@ -141,18 +141,31 @@ export class AuthService {
       throw new ForbiddenException(
         'Access Denied',
       );
-    // }
-    const tokens = await this.getToken(
+
+    const token = await this.signToken(
       user.id,
       user.email,
       user.type,
     );
 
-    await this.updateRtHash(
-      user.id,
-      tokens.refresh_token,
-    );
-    return tokens;
+    const decodedToken = this.jwt.decode(rt) as {
+      sub: number;
+      email: string;
+      type: string;
+      iat: number;
+      exp: number;
+    };
+
+    if (decodedToken) {
+      //check if the current date is greater than the date the refresh token would expire, if it is log out user by deleting the refresh token
+      if (Date.now() > decodedToken.exp) {
+        await this.logout(userId);
+      }
+    } else {
+      console.log('Token could not be decoded.');
+    }
+
+    return token;
   }
 
   async signToken(
@@ -161,7 +174,6 @@ export class AuthService {
     type: string,
   ): Promise<{
     access_token: string;
-    decoded: any;
   }> {
     const payload = {
       sub: userId,
@@ -169,15 +181,14 @@ export class AuthService {
       type,
     };
 
-    const secret = this.config.get('JWT_SECRET');
+    const secret = this.config.get('AT_SECRET');
 
     const token = await this.jwt.signAsync(
       payload,
-      { expiresIn: '15h', secret: secret },
+      { expiresIn: 60 * 15, secret: secret },
     );
     return {
       access_token: token,
-      decoded: this.jwt.decode(token),
     };
   }
 
