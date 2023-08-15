@@ -1,17 +1,28 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
+
 import { PrismaService } from '../../prisma/prisma.service';
+
 import {
-  Cron,
-  CronExpression,
-} from '@nestjs/schedule';
-import { AuthDto, AuthSigninDto } from '../dto';
+  AuthDto,
+  AuthSigninDto,
+  PasswordResetDto,
+  decodedToken,
+} from '../dto';
+
 import * as argon from 'argon2';
+
+import * as crypto from 'crypto';
+
 import { Prisma } from '@prisma/client';
+
 import { JwtService } from '@nestjs/jwt';
+
 import { ConfigService } from '@nestjs/config';
+
 import { Tokens } from '../types';
 
 @Injectable()
@@ -22,6 +33,7 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
+  /************** SIGN UP ******************/
   async signup(dto: AuthDto): Promise<Tokens> {
     //generate a hash password
     const hash = await argon.hash(dto.password);
@@ -62,7 +74,9 @@ export class AuthService {
       throw error;
     }
   }
+  /************** END OF SIGN UP ******************/
 
+  /************** SIGN IN ******************/
   async signin(
     dto: AuthSigninDto,
   ): Promise<Tokens> {
@@ -105,6 +119,9 @@ export class AuthService {
     );
     return tokens;
   }
+  /************** END OF SIGN IN ******************/
+
+  /************** LOG OUT ******************/
   async logout(userId: number) {
     await this.prisma.user.updateMany({
       where: {
@@ -118,8 +135,9 @@ export class AuthService {
       },
     });
   }
+  /************** END OF LOG OUT ******************/
 
-  // @Cron('*/5 * * * * *')
+  /************** REFRESH ******************/
   async refreshTokens(
     userId: number,
     rt: string,
@@ -138,13 +156,12 @@ export class AuthService {
       );
 
     const rtMatches = await argon.verify(
-      user.hashedRefreshToken!,
+      user.hashedRefreshToken,
       rt,
     );
-
     if (!rtMatches)
       throw new ForbiddenException(
-        'Access Denied',
+        'Access Denied ooo',
       );
 
     const token = await this.signToken(
@@ -153,26 +170,29 @@ export class AuthService {
       user.type,
     );
 
-    const decodedToken = this.jwt.decode(rt) as {
-      sub: number;
-      email: string;
-      type: string;
-      iat: number;
-      exp: number;
-    };
+    const decodedToken: decodedToken =
+      (await this.jwt.decode(rt)) as {
+        sub: number;
+        email: string;
+        type: string;
+        iat: number;
+        exp: number;
+      };
 
-    // if (decodedToken) {
-    //   //check if the current date is greater than the date the refresh token would expire, if it is log out user by deleting the refresh token
-    //   if (Date.now() > decodedToken.exp) {
-    //     await this.logout(userId);
-    //   }
-    // } else {
-    //   console.log('Token could not be decoded.');
-    // }
+    if (decodedToken) {
+      //check if the current date is greater than the date the refresh token would expire, if it is log out user by deleting the refresh token
+      if (Date.now() > decodedToken.exp * 1000) {
+        await this.logout(userId);
+      }
+    } else {
+      console.log('Token could not be decoded.');
+    }
 
     return token;
   }
+  /************** END OF REFRESH ******************/
 
+  /************** SIGN TOKEN ******************/
   async signToken(
     userId: number,
     email: string,
@@ -196,7 +216,9 @@ export class AuthService {
       access_token: token,
     };
   }
+  /************** END OF SIGN TOKEN ******************/
 
+  /************** GET TOKEN ******************/
   async getToken(
     userId: number,
     email: string,
@@ -227,7 +249,9 @@ export class AuthService {
       refresh_token: rt,
     };
   }
+  /************** END OF GET TOKEN ******************/
 
+  /************ UPDATE REFRESH TOKEN HASH ON THE DB ***************/
   async updateRtHash(userId: number, rt: string) {
     const hash = await argon.hash(rt);
     await this.prisma.user.update({
@@ -239,4 +263,121 @@ export class AuthService {
       },
     });
   }
+  /************** END OF UPDATE RT HASH ******************/
+
+  /************ GENERATE RESET TOKEN FOR PASSWORD CHANGE **********/
+  async getResetToken(email: string): Promise<{
+    resetToken: string;
+    passwordResetToken: string;
+    passwordResetExpires: Date;
+  }> {
+    const resetToken = crypto
+      .randomBytes(32)
+      .toString('hex');
+
+    const passwordResetToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    // console.log({ resetToken }, this.passwordResetToken);
+    const passwordResetExpires = new Date();
+    passwordResetExpires.setMinutes(
+      passwordResetExpires.getMinutes() + 10,
+    );
+
+    const resetCreds =
+      await this.prisma.user.update({
+        where: { email: email },
+        data: {
+          passwordResetToken: passwordResetToken,
+          passwordResetExpires:
+            passwordResetExpires,
+        },
+      });
+
+    if (!resetCreds) {
+      throw new BadRequestException(
+        `Token could not be sent to ${email}`,
+      );
+    }
+    return {
+      resetToken,
+      passwordResetToken,
+      passwordResetExpires,
+    };
+  }
+  /************** END OF GET RESET TOKEN ******************/
+
+  /************** RESET PASSWORD ******************/
+  async resetPassword(
+    token: string,
+    dto: PasswordResetDto,
+  ) {
+    if (dto.password !== dto.passwordConfirm) {
+      throw new BadRequestException(
+        'Passwords do not match',
+      );
+    }
+    const user = await this.prisma.user.findFirst(
+      {
+        where: {
+          passwordResetToken: token,
+          passwordResetExpires: {
+            gte: new Date(),
+          },
+        },
+      },
+    );
+
+    if (!user) {
+      throw new BadRequestException(
+        'Token is invalid or has expired',
+      );
+    }
+
+    const hash = await argon.hash(dto.password);
+    const updatedUser =
+      await this.prisma.user.update({
+        where: { email: user.email },
+        data: {
+          hash: hash,
+          passwordChangedAt: new Date(),
+          passwordResetToken: null,
+          passwordResetExpires: null,
+        },
+      });
+
+    if (!updatedUser) {
+      throw new BadRequestException(
+        'Password could not be updated',
+      );
+    }
+
+    // if (
+    //   user.hashedRefreshToken &&
+    //   updatedUser.passwordChangedAt
+    // ) {
+    //   const decodedToken = (await this.jwt.decode(
+    //     user.hashedRefreshToken,
+    //   )) as {
+    //     sub: number;
+    //     email: string;
+    //     type: string;
+    //     iat: number;
+    //     exp: number;
+    //   };
+    //   const passwordChangedAt =
+    //     updatedUser.passwordChangedAt.getTime();
+    //   if (decodedToken.iat < passwordChangedAt) {
+    //     await this.logout(decodedToken.sub);
+    //   }
+    // }
+
+    // console.log(dec);
+
+    return 'Password updated successfully!';
+  }
+
+  /************** END OF RESET PASSWORD ******************/
 }

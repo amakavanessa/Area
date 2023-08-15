@@ -1,16 +1,22 @@
 import {
   Body,
   Controller,
+  Patch,
   Post,
   HttpCode,
   HttpStatus,
+  Param,
   UseGuards,
 } from '@nestjs/common';
 
 import { User } from '@prisma/client';
 
 import { AuthService } from './services/auth.service';
-import { AuthDto, AuthSigninDto } from './dto';
+import {
+  AuthDto,
+  AuthSigninDto,
+  PasswordResetDto,
+} from './dto';
 import { RtGuard } from './guard';
 import { Tokens } from './types';
 import { GetUser, Public } from './decorator';
@@ -52,6 +58,27 @@ export class AuthController {
     return this.authService.refreshTokens(
       user.id,
       refreshToken,
+    );
+  }
+
+  @Patch('password/send-reset-token')
+  async generateResetToken(
+    @GetUser() user: User,
+  ) {
+    return this.authService.getResetToken(
+      user.email,
+    );
+  }
+
+  @Patch('reset-password/:token')
+  async resetPassword(
+    @Param('token') token: string,
+    @Body() dto: PasswordResetDto,
+    @GetUser() user: User,
+  ) {
+    return this.authService.resetPassword(
+      token,
+      dto,
     );
   }
 }

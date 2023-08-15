@@ -35,3 +35,18 @@ export class AuthSigninDto {
   @IsNotEmpty()
   password: string;
 }
+
+export class PasswordResetDto {
+  @IsString()
+  password: string;
+  @IsString()
+  passwordConfirm: string;
+}
+
+export class decodedToken {
+  sub: number;
+  email: string;
+  type: string;
+  iat: number;
+  exp: number;
+}

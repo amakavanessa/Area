@@ -7,14 +7,12 @@ import {
   JwtStrategy,
   RtStrategy,
 } from './strategy';
-import { RefreshScheduleService } from './services/refresh-schedule.service';
 
 @Module({
   imports: [JwtModule.register({})],
   controllers: [AuthController],
   providers: [
     AuthService,
-    RefreshScheduleService,
     JwtStrategy,
     AtStrategy,
     RtStrategy,
