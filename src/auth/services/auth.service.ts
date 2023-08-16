@@ -55,7 +55,7 @@ export class AuthService {
         user.type,
       );
 
-      await this.updateRtHash(
+      await this.createRtHash(
         user.id,
         tokens.refresh_token,
       );
@@ -113,7 +113,7 @@ export class AuthService {
       user.type,
     );
 
-    await this.updateRtHash(
+    await this.createRtHash(
       user.id,
       tokens.refresh_token,
     );
@@ -122,74 +122,74 @@ export class AuthService {
   /************** END OF SIGN IN ******************/
 
   /************** LOG OUT ******************/
-  async logout(userId: number) {
-    await this.prisma.user.updateMany({
+  async logout(userId: number, rT: string) {
+    const rtMatches = await argon.hash(rT);
+    await this.prisma.rT.updateMany({
       where: {
-        id: userId,
-        hashedRefreshToken: {
-          not: null,
-        },
+        userId: userId,
+        hashedRefreshToken: rtMatches,
       },
       data: {
         hashedRefreshToken: null,
       },
     });
+    return true;
   }
   /************** END OF LOG OUT ******************/
 
   /************** REFRESH ******************/
-  async refreshTokens(
-    userId: number,
-    rt: string,
-  ) {
-    const user = await this.prisma.user.findFirst(
-      {
-        where: {
-          id: userId,
-        },
-      },
-    );
+  // async refreshTokens(
+  //   userId: number,
+  //   rt: string,
+  // ) {
+  //   const user = await this.prisma.user.findFirst(
+  //     {
+  //       where: {
+  //         id: userId,
+  //       },
+  //     },
+  //   );
 
-    if (!user || !user.hashedRefreshToken)
-      throw new ForbiddenException(
-        'Access Denied heyyy',
-      );
+  //   if (!user || !user.hashedRefreshToken)
+  //     throw new ForbiddenException(
+  //       'Access Denied heyyy',
+  //     );
 
-    const rtMatches = await argon.verify(
-      user.hashedRefreshToken,
-      rt,
-    );
-    if (!rtMatches)
-      throw new ForbiddenException(
-        'Access Denied ooo',
-      );
+  //   const rtMatches = await argon.verify(
+  //     user.hashedRefreshToken,
+  //     rt,
+  //   );
+  //   if (!rtMatches)
+  //     throw new ForbiddenException(
+  //       'Access Denied ooo',
+  //     );
 
-    const token = await this.signToken(
-      user.id,
-      user.email,
-      user.type,
-    );
+  //   const token = await this.signToken(
+  //     user.id,
+  //     user.email,
+  //     user.type,
+  //   );
 
-    const decodedToken: decodedToken =
-      (await this.jwt.decode(rt)) as {
-        sub: number;
-        email: string;
-        type: string;
-        iat: number;
-        exp: number;
-      };
+  //   const decodedToken: decodedToken =
+  //     this.jwt.decode(rt) as {
+  //       sub: number;
+  //       email: string;
+  //       type: string;
+  //       iat: number;
+  //       exp: number;
+  //     };
 
-    if (decodedToken) {
-      //check if the current date is greater than the date the refresh token would expire, if it is log out user by deleting the refresh token
-      if (Date.now() > decodedToken.exp * 1000) {
-        await this.logout(userId);
-      }
-    } else {
-      console.log('Token could not be decoded.');
-    }
+  //   if (decodedToken) {
+  //     //check if the current date is greater than the date the refresh token would expire, if it is log out user by deleting the refresh token
+  //     if (Date.now() > decodedToken.exp * 1000) {
+  //       await this.logout(userId);
+  //     }
+  //   } else {
+  //     console.log('Token could not be decoded.');
+  //   }
 
-    return token;
-  }
+  //   return token;
+  // }
   /************** END OF REFRESH ******************/
 
   /************** SIGN TOKEN ******************/
@@ -254,12 +254,22 @@ export class AuthService {
   /************ UPDATE REFRESH TOKEN HASH ON THE DB ***************/
   async updateRtHash(userId: number, rt: string) {
     const hash = await argon.hash(rt);
-    await this.prisma.user.update({
+    await this.prisma.rT.update({
       where: {
         id: userId,
       },
       data: {
         hashedRefreshToken: hash,
+      },
+    });
+  }
+
+  async createRtHash(userId: number, rt: string) {
+    const hash = await argon.hash(rt);
+    const token = await this.prisma.rT.create({
+      data: {
+        hashedRefreshToken: hash,
+        userId,
       },
     });
   }
@@ -310,74 +320,75 @@ export class AuthService {
   /************** END OF GET RESET TOKEN ******************/
 
   /************** RESET PASSWORD ******************/
-  async resetPassword(
-    token: string,
-    dto: PasswordResetDto,
-  ) {
-    if (dto.password !== dto.passwordConfirm) {
-      throw new BadRequestException(
-        'Passwords do not match',
-      );
-    }
-    const user = await this.prisma.user.findFirst(
-      {
-        where: {
-          passwordResetToken: token,
-          passwordResetExpires: {
-            gte: new Date(),
-          },
-        },
-      },
-    );
+  // async resetPassword(
+  //   token: string,
+  //   dto: PasswordResetDto,
+  // ) {
+  //   if (dto.password !== dto.passwordConfirm) {
+  //     throw new BadRequestException(
+  //       'Passwords do not match',
+  //     );
+  //   }
+  //   const user = await this.prisma.user.findFirst(
+  //     {
+  //       where: {
+  //         passwordResetToken: token,
+  //         passwordResetExpires: {
+  //           gte: new Date(),
+  //         },
+  //       },
+  //     },
+  //   );
 
-    if (!user) {
-      throw new BadRequestException(
-        'Token is invalid or has expired',
-      );
-    }
+  //   if (!user) {
+  //     throw new BadRequestException(
+  //       'Token is invalid or has expired',
+  //     );
+  //   }
 
-    const hash = await argon.hash(dto.password);
-    const updatedUser =
-      await this.prisma.user.update({
-        where: { email: user.email },
-        data: {
-          hash: hash,
-          passwordChangedAt: new Date(),
-          passwordResetToken: null,
-          passwordResetExpires: null,
-        },
-      });
+  //   const hash = await argon.hash(dto.password);
+  //   const updatedUser =
+  //     await this.prisma.user.update({
+  //       where: { email: user.email },
+  //       data: {
+  //         hash: hash,
+  //         passwordChangedAt: new Date(),
+  //         passwordResetToken: null,
+  //         passwordResetExpires: null,
+  //       },
+  //     });
 
-    if (!updatedUser) {
-      throw new BadRequestException(
-        'Password could not be updated',
-      );
-    }
+  //   if (!updatedUser) {
+  //     throw new BadRequestException(
+  //       'Password could not be updated',
+  //     );
+  //   }
 
-    // if (
-    //   user.hashedRefreshToken &&
-    //   updatedUser.passwordChangedAt
-    // ) {
-    //   const decodedToken = (await this.jwt.decode(
-    //     user.hashedRefreshToken,
-    //   )) as {
-    //     sub: number;
-    //     email: string;
-    //     type: string;
-    //     iat: number;
-    //     exp: number;
-    //   };
-    //   const passwordChangedAt =
-    //     updatedUser.passwordChangedAt.getTime();
-    //   if (decodedToken.iat < passwordChangedAt) {
-    //     await this.logout(decodedToken.sub);
-    //   }
-    // }
+  //   // if (
+  //   //   user.hashedRefreshToken &&
+  //   //   updatedUser.passwordChangedAt
+  //   // ) {
+  //   //   const decodedToken = this.jwt.decode(
+  //   //     user.hashedRefreshToken,
+  //   //   ) as {
+  //   //     sub: number;
+  //   //     email: string;
+  //   //     type: string;
+  //   //     iat: number;
+  //   //     exp: number;
+  //   //   };
+  //     // const passwordChangedAt =
+  //     //   updatedUser.passwordChangedAt.getTime();
+  //     // if (decodedToken.iat < passwordChangedAt) {
+  //     //   await this.logout(decodedToken.sub);
+  //     // }
+  //     console.log(decodedToken);
+  //   }
 
-    // console.log(dec);
+  //   // console.log(dec);
 
-    return 'Password updated successfully!';
-  }
+  //   return 'Password updated successfully!';
+  // }
 
   /************** END OF RESET PASSWORD ******************/
 }

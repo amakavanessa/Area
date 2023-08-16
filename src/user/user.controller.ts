@@ -5,7 +5,6 @@ import {
   Delete,
   Param,
   Patch,
-  UseGuards,
   UploadedFile,
   UseInterceptors,
   Res,
@@ -14,16 +13,14 @@ import { Express, Response } from 'express';
 
 import { GetUser } from '../auth/decorator';
 
-import { JwtGuard } from '../auth/guard';
-
 import { UserService } from './user.service';
 
-import { User } from '@prisma/client';
 import { UserUpdateDto } from './dto';
+import { decodedToken } from 'src/auth/dto';
+
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 
-@UseGuards(JwtGuard)
 @Controller('users')
 export class UserController {
   constructor(private userService: UserService) {}
@@ -34,10 +31,9 @@ export class UserController {
   }
 
   @Get('me')
-  async getMe(@GetUser() user: User) {
+  async getMe(@GetUser() user: decodedToken) {
     // return user;
-    console.log(user.id);
-    return this.userService.getMe(user.id);
+    return this.userService.getMe(user.sub);
 
     //user returns just email,username and type because that is what we used to create the token and getUser decorator gets user from the token
   }
@@ -86,7 +82,7 @@ export class UserController {
   )
   async updateMe(
     @Body() dto: UserUpdateDto,
-    @GetUser() user: User,
+    @GetUser() user: decodedToken,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (file) {
@@ -94,7 +90,7 @@ export class UserController {
     }
 
     return this.userService.updateMe(
-      user.id,
+      user.sub,
       dto,
     );
   }
@@ -108,7 +104,7 @@ export class UserController {
   }
 
   @Delete('me')
-  deleteMe(@GetUser() user: User) {
-    return this.userService.deleteMe(user.id);
+  deleteMe(@GetUser() user: decodedToken) {
+    return this.userService.deleteMe(user.sub);
   }
 }

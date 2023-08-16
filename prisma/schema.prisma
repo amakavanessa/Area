@@ -19,16 +19,28 @@ model User{
   username String @unique
   type String
   profilePicture String?
-  hashedRefreshToken String?
+
   passwordChangedAt DateTime?
   passwordResetToken String?
   passwordResetExpires DateTime?
 
+  refreshTokens RT[]
   bookmarks Bookmark[]
   reviews Review[]
   hosts Host[]
   
   @@map("users")
+}
+
+model RT{
+  id Int @id @default(autoincrement())
+  hashedRefreshToken String?
+  issuedAt DateTime @default(now())
+  userId Int
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("refreshTokens")
 }
 
 model Host{
