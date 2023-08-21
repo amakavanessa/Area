@@ -123,18 +123,21 @@ export class AuthService {
 
   /************** LOG OUT ******************/
   async logout(userId: number, rT: string) {
-    const rtMatches = await argon.hash(rT);
-    await this.prisma.rT.updateMany({
-      where: {
-        userId: userId,
-        hashedRefreshToken: rtMatches,
-      },
-      data: {
-        hashedRefreshToken: null,
-      },
-    });
-    return true;
+    const parts = rT.split(' ');
+    const rt_token = parts[1];
+    const nouser =
+      await this.prisma.rT.deleteMany({
+        where: {
+          userId: userId,
+          hashedRefreshToken: rt_token,
+        },
+      });
+    if (!nouser)
+      return 'Problem logging out user';
+
+    return 'User logged out successfully';
   }
+
   /************** END OF LOG OUT ******************/
 
   /************** REFRESH ******************/
@@ -265,10 +268,9 @@ export class AuthService {
   }
 
   async createRtHash(userId: number, rt: string) {
-    const hash = await argon.hash(rt);
     const token = await this.prisma.rT.create({
       data: {
-        hashedRefreshToken: hash,
+        hashedRefreshToken: rt,
         userId,
       },
     });

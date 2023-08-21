@@ -46,16 +46,23 @@ export class AuthController {
     return this.authService.signin(dto);
   }
 
+  @Public()
+  @UseGuards(RtGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout() {
-    // Clear the access_token cookie by setting it to an expired date
-    // res.clearCookie('access_token');
+  logout(
+    @GetUser() user: decodedToken,
+    @Req() request: Request,
+  ) {
+    const authorizationHeader =
+      request.headers.authorization;
 
-    // Optionally, clear other cookies like refresh_token
-
-    // Return a response indicating successful logout
-    return 'Logout successful';
+    console.log(user.sub);
+    console.log(authorizationHeader);
+    return this.authService.logout(
+      user.sub,
+      authorizationHeader!,
+    );
   }
 
   // @Public()
